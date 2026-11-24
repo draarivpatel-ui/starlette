@@ -190,7 +190,7 @@ def test_router(client: TestClient) -> None:
     response = client.post("/")
     assert response.status_code == 405
     assert response.text == "Method Not Allowed"
-    assert set(response.headers["allow"].split(", ")) == {"HEAD", "GET"}
+    assert response.headers["allow"] == "GET, HEAD"
 
     response = client.get("/foo")
     assert response.status_code == 404
@@ -316,6 +316,22 @@ def test_router_add_route(client: TestClient) -> None:
     response = client.get("/func")
     assert response.status_code == 200
     assert response.text == "Hello, world!"
+
+
+def test_method_not_allowed_allow_header_is_sorted(
+    test_client_factory: TestClientFactory,
+) -> None:
+    # https://github.com/Kludex/starlette/issues/3793
+    app = Router(
+        routes=[
+            Route("/multi", endpoint=homepage, methods=["GET", "POST", "PUT"]),
+        ]
+    )
+    client = test_client_factory(app)
+    response = client.delete("/multi")
+    assert response.status_code == 405
+    assert response.text == "Method Not Allowed"
+    assert response.headers["allow"] == "GET, HEAD, POST, PUT"
 
 
 def test_router_duplicate_path(client: TestClient) -> None:

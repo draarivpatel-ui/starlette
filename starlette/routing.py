@@ -279,7 +279,7 @@ class Route(BaseRoute):
 
     async def handle(self, scope: Scope, receive: Receive, send: Send) -> None:
         if self.methods and scope["method"] not in self.methods:
-            headers = {"Allow": ", ".join(self.methods)}
+            headers = {"Allow": ", ".join(sorted(self.methods))}
             if "app" in scope:
                 raise HTTPException(status_code=405, headers=headers)
             else:
